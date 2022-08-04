@@ -62,7 +62,8 @@ func main() {
 				log.Fatal(err)
 			}
 
-			f, err := AppFs.Create(p)
+			htmlDocPath := strings.ReplaceAll(p, ".md", ".html")
+			f, err := AppFs.Create(htmlDocPath)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -116,8 +117,21 @@ func addStyle(n *html.Node) {
 func extractLinks(d fs.DirEntry, currentPath string) func(*html.Node) {
 	return func(n *html.Node) {
 
-		if n.Type == html.ElementNode && n.Data == "img" {
-			for _, a := range n.Attr {
+		if n.Type == html.ElementNode && n.Data == "img" || n.Data == "a" {
+
+			// for _, a := range n.Attr {
+			for i := 0; i < len(n.Attr); i++ {
+				a := n.Attr[i]
+				if a.Key == "href" {
+					if strings.HasSuffix(a.Val, ".md") {
+						n.Attr[i].Val = strings.ReplaceAll(a.Val, ".md", ".html") // watch out for false matches
+					}
+				}
+
+				if a.Key == "target" {
+					n.Attr[i].Val = "_self"
+				}
+
 				if a.Key == "src" {
 					a.Val = strings.Split(a.Val, "?")[0]
 
